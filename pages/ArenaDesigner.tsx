@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
+import {
   Sparkles, Layers, Palette, Type as TypeIcon, Box, Zap,
   Settings, Save, ArrowLeft, Bot, Wand2, RefreshCw,
   Plus, Trash2, Eye, Layout, Sliders, Activity, Monitor,
@@ -10,6 +10,7 @@ import {
 import { ArenaService, BotService } from '../services/store';
 import { ModelRouter } from '../services/llm';
 import { ArenaConfig, BotConfig, ArenaTheme } from '../types';
+import { ARENA_TEMPLATES } from '../constants';
 
 export default function ArenaDesigner() {
   const { id } = useParams();
@@ -55,7 +56,7 @@ export default function ArenaDesigner() {
   const toggleBotSelection = (botId: string) => {
     if (!arena) return;
     const current = arena.bot_ids || [];
-    const updated = current.includes(botId) 
+    const updated = current.includes(botId)
       ? current.filter(b => b !== botId)
       : [...current, botId];
     setArena({ ...arena, bot_ids: updated });
@@ -80,90 +81,120 @@ export default function ArenaDesigner() {
           </button>
           <div>
             <div className="flex items-center gap-2 mb-1">
-               <div className="w-1 h-1 rounded-full bg-blue-500 status-pulse"></div>
-               <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.4em]">Visual Synthesis Core</span>
+              <div className="w-1 h-1 rounded-full bg-blue-500 status-pulse"></div>
+              <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.4em]">Visual Synthesis Core</span>
             </div>
             <div className="flex items-center gap-4">
-               <input 
-                  type="text" 
-                  value={arena.name} 
-                  onChange={(e) => setArena({ ...arena, name: e.target.value.toUpperCase() })}
-                  className="text-3xl font-black text-white tracking-tighter uppercase bg-transparent outline-none border-b border-transparent focus:border-blue-500 transition-all placeholder-slate-700"
-                  placeholder="ARENA NAME"
-               />
+              <input
+                type="text"
+                value={arena.name}
+                onChange={(e) => setArena({ ...arena, name: e.target.value.toUpperCase() })}
+                className="text-3xl font-black text-white tracking-tighter uppercase bg-transparent outline-none border-b border-transparent focus:border-blue-500 transition-all placeholder-slate-700"
+                placeholder="ARENA NAME"
+              />
             </div>
           </div>
         </div>
         <div className="flex gap-3">
-           <button onClick={saveArena} className="bg-white text-black px-8 py-3 rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-3 shadow-xl active:scale-95 border border-white/10">
-             <Save size={18} /> Initialize Manifest
-           </button>
+          <button onClick={saveArena} className="bg-white text-black px-8 py-3 rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-3 shadow-xl active:scale-95 border border-white/10">
+            <Save size={18} /> Initialize Manifest
+          </button>
         </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-8 overflow-hidden">
         {/* Left Control Panel: High-Density Customization */}
         <div className="xl:col-span-4 space-y-6 overflow-y-auto no-scrollbar pr-2">
-          
+
           {/* Global Directives & Swarm Control */}
           <div className="liquid-glass p-8 rounded-[2rem] space-y-6">
-             <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-                <Globe size={18} className="text-blue-500" />
-                <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Global Protocol</h3>
-             </div>
-             
-             <div className="space-y-4">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Shared System Prompt</label>
-                <textarea 
-                   value={arena.global_system_prompt || ''}
-                   onChange={(e) => setArena({ ...arena, global_system_prompt: e.target.value })}
-                   placeholder="Directives applied to ALL agents in this arena (e.g. 'Speak in riddles', 'Collaborate on code')..."
-                   className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-[12px] font-mono text-slate-300 placeholder:text-slate-700 h-32 focus:border-blue-500/30 outline-none resize-none shadow-inner"
-                />
-             </div>
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <Globe size={18} className="text-blue-500" />
+              <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Global Protocol</h3>
+            </div>
 
-             <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-2">
-                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <Gavel size={12} /> Turn Arbitration
-                   </label>
-                   <select 
-                      value={arena.turn_arbitration || 'round_robin'}
-                      onChange={(e) => setArena({ ...arena, turn_arbitration: e.target.value as any })}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white outline-none"
-                   >
-                      <option value="round_robin">Round Robin</option>
-                      <option value="priority">Priority Based</option>
-                      <option value="random">Stochastic</option>
-                   </select>
-                </div>
-                <div className="space-y-2">
-                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <MessagesSquare size={12} /> Debate Logic
-                   </label>
-                   <button 
-                      onClick={() => updateTheme({ layout_mode: arena.theme.layout_mode === 'debate_mode' ? 'chat_focus' : 'debate_mode' })}
-                      className={`w-full py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${arena.theme.layout_mode === 'debate_mode' ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-black/40 border-white/5 text-slate-500'}`}
-                   >
-                      {arena.theme.layout_mode === 'debate_mode' ? 'Active' : 'Disabled'}
-                   </button>
-                </div>
-             </div>
+            <div className="space-y-4">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Shared System Prompt</label>
+              <textarea
+                value={arena.global_system_prompt || ''}
+                onChange={(e) => setArena({ ...arena, global_system_prompt: e.target.value })}
+                placeholder="Directives applied to ALL agents in this arena (e.g. 'Speak in riddles', 'Collaborate on code')..."
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-[12px] font-mono text-slate-300 placeholder:text-slate-700 h-32 focus:border-blue-500/30 outline-none resize-none shadow-inner"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Gavel size={12} /> Turn Arbitration
+                </label>
+                <select
+                  value={arena.turn_arbitration || 'round_robin'}
+                  onChange={(e) => setArena({ ...arena, turn_arbitration: e.target.value as any })}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white outline-none"
+                >
+                  <option value="round_robin">Round Robin</option>
+                  <option value="priority">Priority Based</option>
+                  <option value="random">Stochastic</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <MessagesSquare size={12} /> Debate Logic
+                </label>
+                <button
+                  onClick={() => updateTheme({ layout_mode: arena.theme.layout_mode === 'debate_mode' ? 'chat_focus' : 'debate_mode' })}
+                  className={`w-full py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${arena.theme.layout_mode === 'debate_mode' ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-black/40 border-white/5 text-slate-500'}`}
+                >
+                  {arena.theme.layout_mode === 'debate_mode' ? 'Active' : 'Disabled'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Arena Template Selector */}
+          <div className="liquid-glass p-8 rounded-[2rem] space-y-6 border-purple-500/30">
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <Layers size={18} className="text-purple-500" />
+              <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Arena Templates</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.values(ARENA_TEMPLATES).map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => {
+                    if (arena) {
+                      setArena({
+                        ...arena,
+                        theme: { ...arena.theme, ...template.theme } as ArenaTheme
+                      });
+                    }
+                  }}
+                  className="p-4 rounded-xl border border-white/10 bg-black/30 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all group text-left"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-xl">{template.icon}</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-tight group-hover:text-purple-400 transition-colors">{template.name}</span>
+                  </div>
+                  <p className="text-[8px] text-slate-500 line-clamp-2">{template.description}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* AI Vibe Generator */}
           <div className="liquid-glass p-8 rounded-[2rem] space-y-6 border-blue-500/30">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-               <Wand2 size={18} className="text-blue-500" />
-               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Neural Vibe Synthesis</h3>
+              <Wand2 size={18} className="text-blue-500" />
+              <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Neural Vibe Synthesis</h3>
             </div>
-            <textarea 
+            <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the vibe... 'Sleek neon cyberpunk with heavy glass blur and vibrant cyan accents'..."
               className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-[12px] font-mono text-blue-400 placeholder:text-slate-800 h-24 focus:border-blue-500/30 outline-none resize-none"
             />
-            <button 
+            <button
               onClick={handleAISynthesis}
               disabled={isGenerating || !prompt.trim()}
               className="w-full py-4 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-3"
@@ -176,125 +207,125 @@ export default function ArenaDesigner() {
           {/* Aesthetic Engine (Matches Bot Builder) */}
           <div className="liquid-glass p-8 rounded-[2rem] space-y-8">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-               <Palette size={18} className="text-blue-500" />
-               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Aesthetic Engine</h3>
+              <Palette size={18} className="text-blue-500" />
+              <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Aesthetic Engine</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-               <ControlGroup label="Primary Color">
-                  <ColorInput value={arena.theme.primary_color} onChange={(v) => updateTheme({ primary_color: v })} />
-               </ControlGroup>
-               <ControlGroup label="Secondary Color">
-                  <ColorInput value={arena.theme.secondary_color} onChange={(v) => updateTheme({ secondary_color: v })} />
-               </ControlGroup>
-               <ControlGroup label="Background">
-                  <ColorInput value={arena.theme.bg_color} onChange={(v) => updateTheme({ bg_color: v })} />
-               </ControlGroup>
-               <ControlGroup label="Accent Signal">
-                  <ColorInput value={arena.theme.accent_color} onChange={(v) => updateTheme({ accent_color: v })} />
-               </ControlGroup>
+              <ControlGroup label="Primary Color">
+                <ColorInput value={arena.theme.primary_color} onChange={(v) => updateTheme({ primary_color: v })} />
+              </ControlGroup>
+              <ControlGroup label="Secondary Color">
+                <ColorInput value={arena.theme.secondary_color} onChange={(v) => updateTheme({ secondary_color: v })} />
+              </ControlGroup>
+              <ControlGroup label="Background">
+                <ColorInput value={arena.theme.bg_color} onChange={(v) => updateTheme({ bg_color: v })} />
+              </ControlGroup>
+              <ControlGroup label="Accent Signal">
+                <ColorInput value={arena.theme.accent_color} onChange={(v) => updateTheme({ accent_color: v })} />
+              </ControlGroup>
             </div>
 
             <ControlGroup label="Environment Asset">
-               <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus-within:border-blue-500/50 transition-all">
-                  <ImageIcon size={14} className="text-slate-500" />
-                  <input 
-                     type="text" 
-                     placeholder="Background Image URL..."
-                     value={arena.theme.background_image_url || ''}
-                     onChange={(e) => updateTheme({ background_image_url: e.target.value })}
-                     className="bg-transparent border-none text-[11px] font-mono text-white outline-none w-full placeholder:text-slate-700"
-                  />
-               </div>
+              <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus-within:border-blue-500/50 transition-all">
+                <ImageIcon size={14} className="text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Background Image URL..."
+                  value={arena.theme.background_image_url || ''}
+                  onChange={(e) => updateTheme({ background_image_url: e.target.value })}
+                  className="bg-transparent border-none text-[11px] font-mono text-white outline-none w-full placeholder:text-slate-700"
+                />
+              </div>
             </ControlGroup>
 
             <ControlGroup label="Neural Typography">
-               <select 
-                 value={arena.theme.font_family}
-                 onChange={(e) => updateTheme({ font_family: e.target.value })}
-                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[11px] font-mono text-white outline-none"
-               >
-                 <option value="Inter">Inter UI (Default)</option>
-                 <option value="JetBrains Mono">JetBrains (Technical)</option>
-                 <option value="Space Grotesk">Space Grotesk (Modern)</option>
-                 <option value="System-ui">System Default</option>
-               </select>
+              <select
+                value={arena.theme.font_family}
+                onChange={(e) => updateTheme({ font_family: e.target.value })}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[11px] font-mono text-white outline-none"
+              >
+                <option value="Inter">Inter UI (Default)</option>
+                <option value="JetBrains Mono">JetBrains (Technical)</option>
+                <option value="Space Grotesk">Space Grotesk (Modern)</option>
+                <option value="System-ui">System Default</option>
+              </select>
             </ControlGroup>
 
             <div className="space-y-6">
-               <SliderControl 
-                 label="Radius Intensity" 
-                 value={parseInt(arena.theme.border_radius)} 
-                 onChange={(v) => updateTheme({ border_radius: `${v}px` })} 
-                 max={40} 
-               />
-               <SliderControl 
-                 label="Atmospheric Blur" 
-                 value={parseInt(arena.theme.glass_blur)} 
-                 onChange={(v) => updateTheme({ glass_blur: `${v}px` })} 
-                 max={100} 
-               />
+              <SliderControl
+                label="Radius Intensity"
+                value={parseInt(arena.theme.border_radius)}
+                onChange={(v) => updateTheme({ border_radius: `${v}px` })}
+                max={40}
+              />
+              <SliderControl
+                label="Atmospheric Blur"
+                value={parseInt(arena.theme.glass_blur)}
+                onChange={(v) => updateTheme({ glass_blur: `${v}px` })}
+                max={100}
+              />
             </div>
 
             <ControlGroup label="Animation Flux">
-               <div className="grid grid-cols-2 gap-2">
-                 {['none', 'subtle', 'dynamic', 'glitch'].map((s) => (
-                   <button 
-                     key={s}
-                     onClick={() => updateTheme({ animation_style: s as any })}
-                     className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${arena.theme.animation_style === s ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-slate-600 border-white/5 hover:border-white/20'}`}
-                   >
-                     {s}
-                   </button>
-                 ))}
-               </div>
+              <div className="grid grid-cols-2 gap-2">
+                {['none', 'subtle', 'dynamic', 'glitch'].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => updateTheme({ animation_style: s as any })}
+                    className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${arena.theme.animation_style === s ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-slate-600 border-white/5 hover:border-white/20'}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </ControlGroup>
 
             <ControlGroup label="Layout Configuration">
-               <div className="flex bg-black/40 p-1.5 rounded-xl border border-white/5">
-                  <button onClick={() => updateTheme({ layout_mode: 'chat_focus' })} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all ${arena.theme.layout_mode !== 'grid_view' && arena.theme.layout_mode !== 'debate_mode' ? 'bg-white text-black' : 'text-slate-500'}`}>
-                     <AlignLeft size={14} /> <span className="text-[9px] font-black uppercase">Focus</span>
-                  </button>
-                  <button onClick={() => updateTheme({ layout_mode: 'grid_view' })} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all ${arena.theme.layout_mode === 'grid_view' ? 'bg-white text-black' : 'text-slate-500'}`}>
-                     <Grid size={14} /> <span className="text-[9px] font-black uppercase">Grid</span>
-                  </button>
-               </div>
+              <div className="flex bg-black/40 p-1.5 rounded-xl border border-white/5">
+                <button onClick={() => updateTheme({ layout_mode: 'chat_focus' })} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all ${arena.theme.layout_mode !== 'grid_view' && arena.theme.layout_mode !== 'debate_mode' ? 'bg-white text-black' : 'text-slate-500'}`}>
+                  <AlignLeft size={14} /> <span className="text-[9px] font-black uppercase">Focus</span>
+                </button>
+                <button onClick={() => updateTheme({ layout_mode: 'grid_view' })} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all ${arena.theme.layout_mode === 'grid_view' ? 'bg-white text-black' : 'text-slate-500'}`}>
+                  <Grid size={14} /> <span className="text-[9px] font-black uppercase">Grid</span>
+                </button>
+              </div>
             </ControlGroup>
           </div>
 
           {/* Agent Deployment */}
           <div className="liquid-glass p-8 rounded-[2rem] space-y-6">
             <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-               <Bot size={18} className="text-blue-500" />
-               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Intelligence Swarm</h3>
+              <Bot size={18} className="text-blue-500" />
+              <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Intelligence Swarm</h3>
             </div>
             <div className="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
               {allBots.map(bot => {
                 const isSelected = arena.bot_ids.includes(bot.id);
                 return (
                   <div key={bot.id} className="space-y-2">
-                     <button 
-                       onClick={() => toggleBotSelection(bot.id)}
-                       className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'bg-blue-600/10 border-blue-500' : 'bg-black/20 border-white/10 hover:border-white/10'}`}
-                     >
-                       <span className={`text-[11px] font-black uppercase tracking-widest ${isSelected ? 'text-white' : 'text-slate-500'}`}>{bot.name}</span>
-                       <Plus size={14} className={`transition-transform ${isSelected ? 'rotate-45 text-blue-500' : 'text-slate-800'}`} />
-                     </button>
-                     {isSelected && (
-                        <div className="px-4 py-2 flex items-center gap-2 justify-end">
-                           <UserCog size={12} className="text-slate-500" />
-                           <select 
-                              className="bg-transparent text-[9px] font-bold text-blue-400 uppercase outline-none"
-                              value={arena.role_assignment?.[bot.id] || 'executor'}
-                              onChange={(e) => setArena({ ...arena, role_assignment: { ...arena.role_assignment, [bot.id]: e.target.value as any } })}
-                           >
-                              <option value="executor">Executor</option>
-                              <option value="planner">Planner</option>
-                              <option value="critic">Critic</option>
-                              <option value="synthesizer">Synthesizer</option>
-                           </select>
-                        </div>
-                     )}
+                    <button
+                      onClick={() => toggleBotSelection(bot.id)}
+                      className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'bg-blue-600/10 border-blue-500' : 'bg-black/20 border-white/10 hover:border-white/10'}`}
+                    >
+                      <span className={`text-[11px] font-black uppercase tracking-widest ${isSelected ? 'text-white' : 'text-slate-500'}`}>{bot.name}</span>
+                      <Plus size={14} className={`transition-transform ${isSelected ? 'rotate-45 text-blue-500' : 'text-slate-800'}`} />
+                    </button>
+                    {isSelected && (
+                      <div className="px-4 py-2 flex items-center gap-2 justify-end">
+                        <UserCog size={12} className="text-slate-500" />
+                        <select
+                          className="bg-transparent text-[9px] font-bold text-blue-400 uppercase outline-none"
+                          value={arena.role_assignment?.[bot.id] || 'executor'}
+                          onChange={(e) => setArena({ ...arena, role_assignment: { ...arena.role_assignment, [bot.id]: e.target.value as any } })}
+                        >
+                          <option value="executor">Executor</option>
+                          <option value="planner">Planner</option>
+                          <option value="critic">Critic</option>
+                          <option value="synthesizer">Synthesizer</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -305,18 +336,18 @@ export default function ArenaDesigner() {
         {/* Right Live Preview: High-Fidelity Rendering */}
         <div className="xl:col-span-8 flex flex-col gap-6">
           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-                <Layout size={18} className="text-slate-700" />
-                <h3 className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em]">Real-time Deployment Preview</h3>
-             </div>
-             <div className="flex bg-slate-900 p-1 rounded-xl">
-                <button className="p-2 text-blue-500"><Monitor size={14} /></button>
-             </div>
+            <div className="flex items-center gap-4">
+              <Layout size={18} className="text-slate-700" />
+              <h3 className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em]">Real-time Deployment Preview</h3>
+            </div>
+            <div className="flex bg-slate-900 p-1 rounded-xl">
+              <button className="p-2 text-blue-500"><Monitor size={14} /></button>
+            </div>
           </div>
 
-          <div 
+          <div
             className="flex-1 rounded-[3rem] border shadow-[0_0_100px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col transition-all duration-700 bg-cover bg-center"
-            style={{ 
+            style={{
               backgroundColor: arena.theme.bg_color,
               backgroundImage: arena.theme.background_image_url ? `url(${arena.theme.background_image_url})` : undefined,
               borderColor: arena.theme.border_intensity === '1px' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
@@ -326,89 +357,89 @@ export default function ArenaDesigner() {
           >
             {/* Background Overlay */}
             {arena.theme.background_image_url && (
-               <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"></div>
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"></div>
             )}
 
             {/* Mock Header */}
             <div className="h-20 border-b flex items-center justify-between px-10 bg-white/[0.02] backdrop-blur-xl relative z-10" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-               <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: arena.theme.primary_color }}>
-                     <Zap size={20} />
-                  </div>
-                  <div>
-                    <div className="text-[12px] font-black text-white uppercase tracking-widest">{arena.name || 'UNNAMED_ARENA'}</div>
-                    <div className="text-[8px] font-bold text-slate-500 uppercase mt-1 tracking-widest">Neural Link Synchronized</div>
-                  </div>
-               </div>
-               <div className="flex gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: arena.theme.accent_color }}></div>
-                  <div className="w-3 h-3 rounded-full opacity-30" style={{ backgroundColor: arena.theme.accent_color }}></div>
-               </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: arena.theme.primary_color }}>
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <div className="text-[12px] font-black text-white uppercase tracking-widest">{arena.name || 'UNNAMED_ARENA'}</div>
+                  <div className="text-[8px] font-bold text-slate-500 uppercase mt-1 tracking-widest">Neural Link Synchronized</div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: arena.theme.accent_color }}></div>
+                <div className="w-3 h-3 rounded-full opacity-30" style={{ backgroundColor: arena.theme.accent_color }}></div>
+              </div>
             </div>
 
             {/* Mock Swarm Control */}
             <div className="p-6 flex gap-4 overflow-x-auto no-scrollbar relative z-10">
-               {arena.bot_ids.map(bid => {
-                 const b = allBots.find(x => x.id === bid);
-                 if (!b) return null;
-                 return (
-                   <button 
-                     key={bid}
-                     onClick={() => setPreviewBotId(bid)}
-                     className="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest border transition-all whitespace-nowrap"
-                     style={{ 
-                       borderColor: previewBotId === bid ? arena.theme.primary_color : 'rgba(255,255,255,0.05)',
-                       backgroundColor: previewBotId === bid ? `${arena.theme.primary_color}10` : 'transparent',
-                       color: previewBotId === bid ? '#fff' : 'rgba(255,255,255,0.3)'
-                     }}
-                   >
-                     {b.name}
-                   </button>
-                 );
-               })}
+              {arena.bot_ids.map(bid => {
+                const b = allBots.find(x => x.id === bid);
+                if (!b) return null;
+                return (
+                  <button
+                    key={bid}
+                    onClick={() => setPreviewBotId(bid)}
+                    className="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest border transition-all whitespace-nowrap"
+                    style={{
+                      borderColor: previewBotId === bid ? arena.theme.primary_color : 'rgba(255,255,255,0.05)',
+                      backgroundColor: previewBotId === bid ? `${arena.theme.primary_color}10` : 'transparent',
+                      color: previewBotId === bid ? '#fff' : 'rgba(255,255,255,0.3)'
+                    }}
+                  >
+                    {b.name}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Mock Chat Interface */}
             <div className="flex-1 flex flex-col p-10 space-y-10 relative z-10">
-               <div className="flex justify-start">
-                  <div className="max-w-md p-6 rounded-3xl border space-y-2 transition-all" style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.03)', 
-                    borderColor: 'rgba(255,255,255,0.05)',
-                    borderRadius: arena.theme.border_radius
-                  }}>
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Intelligence Node</div>
-                    <p className="text-[14px] text-slate-200 leading-relaxed font-medium">UPLINK_SECURE: Operational manifest loaded into this neural space. How can I assist with your current objective?</p>
-                  </div>
-               </div>
+              <div className="flex justify-start">
+                <div className="max-w-md p-6 rounded-3xl border space-y-2 transition-all" style={{
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  borderColor: 'rgba(255,255,255,0.05)',
+                  borderRadius: arena.theme.border_radius
+                }}>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Intelligence Node</div>
+                  <p className="text-[14px] text-slate-200 leading-relaxed font-medium">UPLINK_SECURE: Operational manifest loaded into this neural space. How can I assist with your current objective?</p>
+                </div>
+              </div>
 
-               <div className="flex justify-end">
-                  <div className="max-w-md p-6 rounded-3xl text-white space-y-2 transition-all shadow-xl" style={{ 
-                    backgroundColor: arena.theme.primary_color,
-                    borderColor: `${arena.theme.primary_color}40`,
-                    borderRadius: arena.theme.border_radius,
-                    boxShadow: arena.theme.button_style === 'glow' ? `0 0 30px ${arena.theme.primary_color}40` : 'none'
-                  }}>
-                    <div className="text-[10px] font-black opacity-60 uppercase tracking-widest">Operator Signal</div>
-                    <p className="text-[14px] leading-relaxed font-bold">Synthesize a strategic report based on the local knowledge vault and active telemetry.</p>
-                  </div>
-               </div>
+              <div className="flex justify-end">
+                <div className="max-w-md p-6 rounded-3xl text-white space-y-2 transition-all shadow-xl" style={{
+                  backgroundColor: arena.theme.primary_color,
+                  borderColor: `${arena.theme.primary_color}40`,
+                  borderRadius: arena.theme.border_radius,
+                  boxShadow: arena.theme.button_style === 'glow' ? `0 0 30px ${arena.theme.primary_color}40` : 'none'
+                }}>
+                  <div className="text-[10px] font-black opacity-60 uppercase tracking-widest">Operator Signal</div>
+                  <p className="text-[14px] leading-relaxed font-bold">Synthesize a strategic report based on the local knowledge vault and active telemetry.</p>
+                </div>
+              </div>
             </div>
 
             {/* Mock Input */}
             <div className="p-10 border-t relative z-10" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-               <div className="flex items-center gap-4 bg-white/[0.02] border p-4 transition-all" style={{ 
-                 borderColor: 'rgba(255,255,255,0.05)',
-                 borderRadius: arena.theme.border_radius,
-                 backdropFilter: `blur(${arena.theme.glass_blur})`
-               }}>
-                  <div className="flex-1 text-[13px] text-slate-600 font-medium">Inject neural directive...</div>
-                  <button className="p-3.5 rounded-xl text-white transition-all active:scale-95" style={{ 
-                    backgroundColor: arena.theme.primary_color,
-                    boxShadow: arena.theme.button_style === 'glow' ? `0 0 20px ${arena.theme.primary_color}40` : 'none'
-                  }}>
-                    <Save size={18} />
-                  </button>
-               </div>
+              <div className="flex items-center gap-4 bg-white/[0.02] border p-4 transition-all" style={{
+                borderColor: 'rgba(255,255,255,0.05)',
+                borderRadius: arena.theme.border_radius,
+                backdropFilter: `blur(${arena.theme.glass_blur})`
+              }}>
+                <div className="flex-1 text-[13px] text-slate-600 font-medium">Inject neural directive...</div>
+                <button className="p-3.5 rounded-xl text-white transition-all active:scale-95" style={{
+                  backgroundColor: arena.theme.primary_color,
+                  boxShadow: arena.theme.button_style === 'glow' ? `0 0 20px ${arena.theme.primary_color}40` : 'none'
+                }}>
+                  <Save size={18} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -430,8 +461,8 @@ function ControlGroup({ label, children }: { label: string, children?: React.Rea
 function ColorInput({ value, onChange }: { value: string, onChange: (v: string) => void }) {
   return (
     <div className="flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-2.5">
-       <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-6 h-6 rounded bg-transparent border-none cursor-pointer" />
-       <input type="text" value={value.toUpperCase()} onChange={(e) => onChange(e.target.value)} className="bg-transparent border-none text-[10px] font-mono text-white outline-none w-full" />
+      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-6 h-6 rounded bg-transparent border-none cursor-pointer" />
+      <input type="text" value={value.toUpperCase()} onChange={(e) => onChange(e.target.value)} className="bg-transparent border-none text-[10px] font-mono text-white outline-none w-full" />
     </div>
   );
 }
@@ -439,16 +470,16 @@ function ColorInput({ value, onChange }: { value: string, onChange: (v: string) 
 function SliderControl({ label, value, onChange, max }: { label: string, value: number, onChange: (v: number) => void, max: number }) {
   return (
     <div className="space-y-3">
-       <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest">
-          <span>{label}</span>
-          <span className="text-blue-500">{value} UNITS</span>
-       </div>
-       <input 
-         type="range" min="0" max={max}
-         value={value}
-         onChange={(e) => onChange(parseInt(e.target.value))}
-         className="w-full h-1.5 bg-blue-900/20 rounded-full appearance-none cursor-pointer accent-blue-500"
-       />
+      <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest">
+        <span>{label}</span>
+        <span className="text-blue-500">{value} UNITS</span>
+      </div>
+      <input
+        type="range" min="0" max={max}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full h-1.5 bg-blue-900/20 rounded-full appearance-none cursor-pointer accent-blue-500"
+      />
     </div>
   );
 }

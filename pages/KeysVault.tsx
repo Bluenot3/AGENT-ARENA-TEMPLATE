@@ -29,10 +29,25 @@ export default function KeysVault() {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(AuthService.getUser());
+  const [testingKey, setTestingKey] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<Record<string, { success: boolean; message: string }>>({});
 
   useEffect(() => {
     setKeys(KeyService.getKeys());
   }, []);
+
+  const handleTestKey = async (providerId: string) => {
+    const key = inputs[providerId];
+    if (!key) return;
+    setTestingKey(providerId);
+    try {
+      const result = await KeyService.testKey(providerId, key);
+      setTestResult(prev => ({ ...prev, [providerId]: result }));
+    } catch (error: any) {
+      setTestResult(prev => ({ ...prev, [providerId]: { success: false, message: error.message } }));
+    }
+    setTestingKey(null);
+  };
 
   const handleSaveKey = (providerId: string) => {
     const val = inputs[providerId];
@@ -76,59 +91,67 @@ export default function KeysVault() {
             <Lock size={48} />
           </div>
           <div className="space-y-4">
-             <h1 className="text-4xl font-black text-white uppercase tracking-tight">Credential Nexus</h1>
-             <p className="text-slate-400 text-lg leading-relaxed max-w-3xl uppercase tracking-wider font-medium opacity-80">
-               ZEN implements a secure BYOK (Bring Your Own Key) protocol. Authorized tokens allow the Foundry to automatically route logic through your local project credits.
-             </p>
+            <h1 className="text-4xl font-black text-white uppercase tracking-tight">Credential Nexus</h1>
+            <p className="text-slate-400 text-lg leading-relaxed max-w-3xl uppercase tracking-wider font-medium opacity-80">
+              ZEN implements a secure BYOK (Bring Your Own Key) protocol. Authorized tokens allow the Foundry to automatically route logic through your local project credits.
+            </p>
           </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-10">
-         <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between mb-4">
-               <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em]">Provider Registry</h2>
-               <div className="flex items-center gap-2 text-blue-500 text-[10px] font-bold uppercase tracking-widest">
-                  <Zap size={14} className="animate-pulse" /> Nodes Active
-               </div>
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em]">Provider Registry</h2>
+            <div className="flex items-center gap-2 text-blue-500 text-[10px] font-bold uppercase tracking-widest">
+              <Zap size={14} className="animate-pulse" /> Nodes Active
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PROVIDERS.map(p => {
-                const existing = keys.find(k => k.provider_id === p.id);
-                return (
-                  <div key={p.id} className={`liquid-glass p-6 rounded-[2rem] flex flex-col gap-5 group transition-all duration-500 ${existing ? 'border-blue-500/30 bg-blue-600/[0.03]' : 'border-white/5'}`}>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${existing ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-slate-500 border-white/10'}`}>
-                           <Key size={18} />
-                         </div>
-                         <h3 className="text-[13px] font-black text-white uppercase tracking-widest">{p.name}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {PROVIDERS.map(p => {
+              const existing = keys.find(k => k.provider_id === p.id);
+              return (
+                <div key={p.id} className={`liquid-glass p-6 rounded-[2rem] flex flex-col gap-5 group transition-all duration-500 ${existing ? 'border-blue-500/30 bg-blue-600/[0.03]' : 'border-white/5'}`}>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${existing ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-slate-500 border-white/10'}`}>
+                        <Key size={18} />
                       </div>
-                      {existing && (
-                        <button onClick={() => handleDelete(p.id)} className="p-2 text-slate-600 hover:text-rose-500 transition-colors">
-                          <Trash size={16} />
-                        </button>
-                      )}
+                      <h3 className="text-[13px] font-black text-white uppercase tracking-widest">{p.name}</h3>
                     </div>
-                    
-                    {existing ? (
-                      <div onClick={() => setSelectedProvider(p.id)} className="cursor-pointer text-emerald-400 flex items-center justify-between gap-2 text-[10px] font-black bg-emerald-500/10 px-4 py-2.5 rounded-xl border border-emerald-500/20 uppercase tracking-[0.2em]">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={14} /> ENCRYPTED: {existing.key_snippet}
-                        </div>
-                        <span className="text-slate-500 text-[8px] hover:text-white transition-colors">CONFIG_MODELS</span>
+                    {existing && (
+                      <button onClick={() => handleDelete(p.id)} className="p-2 text-slate-600 hover:text-rose-500 transition-colors">
+                        <Trash size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {existing ? (
+                    <div onClick={() => setSelectedProvider(p.id)} className="cursor-pointer text-emerald-400 flex items-center justify-between gap-2 text-[10px] font-black bg-emerald-500/10 px-4 py-2.5 rounded-xl border border-emerald-500/20 uppercase tracking-[0.2em]">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={14} /> ENCRYPTED: {existing.key_snippet}
                       </div>
-                    ) : (
+                      <span className="text-slate-500 text-[8px] hover:text-white transition-colors">CONFIG_MODELS</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
                       <div className="flex gap-2">
-                        <input 
+                        <input
                           type="password"
                           placeholder="INPUT_ACCESS_TOKEN..."
                           value={inputs[p.id] || ''}
                           onChange={e => setInputs(prev => ({ ...prev, [p.id]: e.target.value }))}
                           className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-[11px] font-mono text-blue-400 focus:outline-none focus:border-blue-500/50 transition-all"
                         />
-                        <button 
+                        <button
+                          onClick={() => handleTestKey(p.id)}
+                          disabled={!inputs[p.id] || testingKey === p.id}
+                          className="bg-purple-600/20 text-purple-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-all disabled:opacity-30 border border-purple-500/20"
+                        >
+                          {testingKey === p.id ? '...' : 'TEST'}
+                        </button>
+                        <button
                           onClick={() => handleSaveKey(p.id)}
                           disabled={!inputs[p.id]}
                           className="bg-white text-black px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30"
@@ -136,87 +159,92 @@ export default function KeysVault() {
                           LOCK
                         </button>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-         </div>
-
-         {/* Model Permission Sidebar - Liquid Glass Modal Style */}
-         <div className="space-y-6">
-            <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em]">Model Permissions</h2>
-            {selectedProvider ? (
-               <div className="liquid-glass p-8 rounded-[2.5rem] space-y-8 animate-in slide-in-from-right-8 duration-500 border-blue-500/40">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-6">
-                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-                           <Layers size={24} />
+                      {testResult[p.id] && (
+                        <div className={`text-[9px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg ${testResult[p.id].success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                          {testResult[p.id].message}
                         </div>
-                        <div>
-                           <h4 className="text-[14px] font-black text-white uppercase">{selectedProvider} Hub</h4>
-                           <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Select neural nodes</p>
-                        </div>
-                     </div>
-                     <button 
-                        onClick={selectAll}
-                        className="p-2 text-blue-500 hover:text-white transition-all"
-                        title="Select All"
-                     >
-                        <ListChecks size={20} />
-                     </button>
-                  </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                     {MODEL_REGISTRY.filter(m => m.provider_id === selectedProvider).map(m => (
-                        <button 
-                           key={m.model_id}
-                           onClick={() => toggleModel(m.model_id)}
-                           className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                              selectedModels.includes(m.model_id) 
-                              ? 'bg-blue-600/10 border-blue-500 text-white' 
-                              : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
-                           }`}
-                        >
-                           <div className="text-[11px] font-black uppercase truncate pr-4">{m.display_name}</div>
-                           {selectedModels.includes(m.model_id) && <Check size={14} className="text-blue-500" />}
-                        </button>
-                     ))}
-                     {MODEL_REGISTRY.filter(m => m.provider_id === selectedProvider).length === 0 && (
-                        <div className="py-10 text-center opacity-30">
-                           <Zap size={24} className="mx-auto mb-3" />
-                           <span className="text-[9px] font-black uppercase tracking-widest">No nodes for this provider</span>
-                        </div>
-                     )}
+        {/* Model Permission Sidebar - Liquid Glass Modal Style */}
+        <div className="space-y-6">
+          <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em]">Model Permissions</h2>
+          {selectedProvider ? (
+            <div className="liquid-glass p-8 rounded-[2.5rem] space-y-8 animate-in slide-in-from-right-8 duration-500 border-blue-500/40">
+              <div className="flex items-center justify-between border-b border-white/5 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
+                    <Layers size={24} />
                   </div>
+                  <div>
+                    <h4 className="text-[14px] font-black text-white uppercase">{selectedProvider} Hub</h4>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Select neural nodes</p>
+                  </div>
+                </div>
+                <button
+                  onClick={selectAll}
+                  className="p-2 text-blue-500 hover:text-white transition-all"
+                  title="Select All"
+                >
+                  <ListChecks size={20} />
+                </button>
+              </div>
 
-                  <button 
-                     onClick={finalizeModels}
-                     className="w-full py-5 bg-white text-black rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-2xl"
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {MODEL_REGISTRY.filter(m => m.provider_id === selectedProvider).map(m => (
+                  <button
+                    key={m.model_id}
+                    onClick={() => toggleModel(m.model_id)}
+                    className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${selectedModels.includes(m.model_id)
+                      ? 'bg-blue-600/10 border-blue-500 text-white'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                      }`}
                   >
-                     Authorize Nodes
+                    <div className="text-[11px] font-black uppercase truncate pr-4">{m.display_name}</div>
+                    {selectedModels.includes(m.model_id) && <Check size={14} className="text-blue-500" />}
                   </button>
-               </div>
-            ) : (
-               <div className="liquid-glass p-12 rounded-[2.5rem] flex flex-col items-center justify-center text-center opacity-40">
-                  <Plus size={48} className="text-slate-600 mb-4" />
-                  <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.3em]">Lock a provider key to manage permissions</p>
-               </div>
-            )}
+                ))}
+                {MODEL_REGISTRY.filter(m => m.provider_id === selectedProvider).length === 0 && (
+                  <div className="py-10 text-center opacity-30">
+                    <Zap size={24} className="mx-auto mb-3" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">No nodes for this provider</span>
+                  </div>
+                )}
+              </div>
 
-            <div className="liquid-glass p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600/10 to-transparent">
-               <div className="flex items-center gap-4 mb-4">
-                  <Cloud className="text-blue-400" size={24} />
-                  <h3 className="text-[13px] font-black text-white uppercase tracking-widest">Vertex Auto-Sync</h3>
-               </div>
-               <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase mb-6 tracking-tight">
-                  Connect your primary Google project ({user?.email}) for automated quota management and dynamic scaling.
-               </p>
-               <button className="w-full py-4 rounded-xl bg-blue-600/10 border border-blue-500/30 text-blue-400 font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
-                  Initialize Vertex Cloud
-               </button>
+              <button
+                onClick={finalizeModels}
+                className="w-full py-5 bg-white text-black rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-2xl"
+              >
+                Authorize Nodes
+              </button>
             </div>
-         </div>
+          ) : (
+            <div className="liquid-glass p-12 rounded-[2.5rem] flex flex-col items-center justify-center text-center opacity-40">
+              <Plus size={48} className="text-slate-600 mb-4" />
+              <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.3em]">Lock a provider key to manage permissions</p>
+            </div>
+          )}
+
+          <div className="liquid-glass p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600/10 to-transparent">
+            <div className="flex items-center gap-4 mb-4">
+              <Cloud className="text-blue-400" size={24} />
+              <h3 className="text-[13px] font-black text-white uppercase tracking-widest">Vertex Auto-Sync</h3>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase mb-6 tracking-tight">
+              Connect your primary Google project ({user?.email}) for automated quota management and dynamic scaling.
+            </p>
+            <button className="w-full py-4 rounded-xl bg-blue-600/10 border border-blue-500/30 text-blue-400 font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+              Initialize Vertex Cloud
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

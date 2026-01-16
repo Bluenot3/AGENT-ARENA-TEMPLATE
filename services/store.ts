@@ -1,5 +1,5 @@
 
-import { Entitlement, WalletLink, User, ApiKey, BotConfig, UsageEvent, KnowledgeAsset, ArenaConfig, ArenaTheme } from '../types';
+import { Entitlement, WalletLink, User, ApiKey, BotConfig, UsageEvent, KnowledgeAsset, ArenaConfig, ArenaTheme, ImageAsset, CreditsBalance } from '../types';
 import { AESTHETIC_PRESETS } from '../constants';
 
 const STORE_KEYS = {
@@ -10,7 +10,9 @@ const STORE_KEYS = {
   USER: 'zen_user',
   USAGE: 'zen_usage',
   KEYS: 'zen_keys',
-  KNOWLEDGE: 'zen_knowledge'
+  KNOWLEDGE: 'zen_knowledge',
+  CREDITS: 'zen_credits',
+  IMAGE_LIBRARY: 'zen_image_library'
 };
 
 export const ArenaService = {
@@ -71,9 +73,9 @@ export const CommerceService = {
   },
   checkAccess: (userId: string, resourceId: string): boolean => {
     const entitlements = CommerceService.getEntitlements(userId);
-    return entitlements.some(e => 
-      e.resource_id === resourceId && 
-      e.status === 'active' && 
+    return entitlements.some(e =>
+      e.resource_id === resourceId &&
+      e.status === 'active' &&
       (!e.valid_until || new Date(e.valid_until) > new Date())
     );
   },
@@ -147,9 +149,9 @@ export const BotService = {
     system_reminder: 'Focus on being concise and technically accurate.',
     positive_directives: 'Provide clear, logical, and evidence-based responses.',
     negative_directives: 'Avoid excessive jargon, filler words, or unsubstantiated claims.',
-    model_config: { 
-      primary_model: 'gemini-3-flash-preview', 
-      temperature: 0.7, 
+    model_config: {
+      primary_model: 'gemini-3-flash-preview',
+      temperature: 0.7,
       thinking_budget: 0,
       context_budget: 100000,
       max_output_tokens: 8192,
@@ -168,7 +170,7 @@ export const BotService = {
       aspect_ratio: '1:1'
     },
     tools: [
-      { tool_id: 'web_search', name: 'Web Intel', description: 'Real-time search across global networks.', enabled: false },
+      { tool_id: 'web_search', name: 'Web Intel', description: 'Real-time search across global networks.', enabled: false, category: 'core' },
     ],
     knowledge_ids: [],
     starter_prompts: ['Analyze current system state'],
@@ -209,10 +211,41 @@ export const KeyService = {
     if (idx >= 0) keys[idx] = { provider_id: providerId, key_snippet: snippet };
     else keys.push({ provider_id: providerId, key_snippet: snippet });
     localStorage.setItem(STORE_KEYS.KEYS, JSON.stringify(keys));
+    // Also store the full key separately (base64 encoded for basic obfuscation)
+    localStorage.setItem(`zen_key_${providerId}`, btoa(key));
   },
   deleteKey: (providerId: string) => {
     const keys = KeyService.getKeys().filter(k => k.provider_id !== providerId);
     localStorage.setItem(STORE_KEYS.KEYS, JSON.stringify(keys));
+    localStorage.removeItem(`zen_key_${providerId}`);
+  },
+  getFullKey: (providerId: string): string | null => {
+    const encoded = localStorage.getItem(`zen_key_${providerId}`);
+    if (!encoded) return null;
+    try {
+      return atob(encoded);
+    } catch {
+      return null;
+    }
+  },
+  testKey: async (providerId: string, key: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      if (providerId === 'google') {
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: key });
+        const response = await ai.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: 'Say "API key verified" in exactly 3 words.',
+        });
+        if (response.text) {
+          return { success: true, message: 'Google API key verified successfully!' };
+        }
+      }
+      // Add other provider tests here as needed
+      return { success: true, message: `${providerId} key stored (verification pending)` };
+    } catch (error: any) {
+      return { success: false, message: error.message || 'Key verification failed' };
+    }
   }
 };
 
@@ -228,5 +261,158 @@ export const KnowledgeService = {
   deleteAsset: (id: string) => {
     const assets = KnowledgeService.getAssets().filter(a => a.id !== id);
     localStorage.setItem(STORE_KEYS.KNOWLEDGE, JSON.stringify(assets));
+  },
+  // Quick add text/image from chat as knowledge
+  quickAddFromChat: (content: string, name: string, type: 'text' | 'image' = 'text') => {
+    const asset: KnowledgeAsset = {
+      id: crypto.randomUUID(),
+      name,
+      type,
+      source: 'chat_quick_add',
+      content,
+      tags: ['quick-add', 'from-chat'],
+      status: 'indexed',
+      created_at: new Date().toISOString()
+    };
+    KnowledgeService.saveAsset(asset);
+    return asset;
+  }
+};
+
+// === CREDITS SERVICE ===
+const FREE_PLAN_CREDITS = 7;
+const PLUS_PLAN_CREDITS = 500;
+
+export const CreditsService = {
+  getBalance: (): CreditsBalance => {
+    const stored = localStorage.getItem(STORE_KEYS.CREDITS);
+    if (!stored) {
+      // Initialize free plan with 7 credits
+      const initial: CreditsBalance = {
+        total: FREE_PLAN_CREDITS,
+        used: 0,
+        remaining: FREE_PLAN_CREDITS,
+        plan: 'free'
+      };
+      localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(initial));
+      return initial;
+    }
+    return JSON.parse(stored);
+  },
+
+  useCredit: (amount: number = 1): boolean => {
+    const balance = CreditsService.getBalance();
+    // Pro/Enterprise users have unlimited credits
+    if (balance.plan === 'pro' || balance.plan === 'enterprise') {
+      balance.used += amount;
+      localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+      return true;
+    }
+
+    if (balance.remaining < amount) return false;
+
+    balance.used += amount;
+    balance.remaining -= amount;
+    localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+    return true;
+  },
+
+  addCredits: (amount: number) => {
+    const balance = CreditsService.getBalance();
+    balance.total += amount;
+    balance.remaining += amount;
+    localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+  },
+
+  upgradeToPlus: (stripeCustomerId?: string, stripeSubscriptionId?: string) => {
+    const balance: CreditsBalance = {
+      total: PLUS_PLAN_CREDITS,
+      used: 0,
+      remaining: PLUS_PLAN_CREDITS,
+      plan: 'plus',
+      reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId
+    };
+    localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+    AuthService.setSubscription(true);
+  },
+
+  upgradeToPro: (stripeCustomerId?: string, stripeSubscriptionId?: string) => {
+    const balance: CreditsBalance = {
+      total: 999999,
+      used: 0,
+      remaining: 999999,
+      plan: 'pro',
+      reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId
+    };
+    localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+    AuthService.setSubscription(true);
+  },
+
+  resetToFree: () => {
+    const balance: CreditsBalance = {
+      total: FREE_PLAN_CREDITS,
+      used: 0,
+      remaining: FREE_PLAN_CREDITS,
+      plan: 'free'
+    };
+    localStorage.setItem(STORE_KEYS.CREDITS, JSON.stringify(balance));
+    AuthService.setSubscription(false);
+  },
+
+  hasCredits: (amount: number = 1): boolean => {
+    const balance = CreditsService.getBalance();
+    return balance.remaining >= amount || balance.plan === 'pro' || balance.plan === 'enterprise';
+  },
+
+  isPaidPlan: (): boolean => {
+    const balance = CreditsService.getBalance();
+    return balance.plan !== 'free';
+  },
+
+  getLowCreditsWarning: (): boolean => {
+    const balance = CreditsService.getBalance();
+    if (balance.plan === 'pro' || balance.plan === 'enterprise') return false;
+    return balance.remaining <= 2;
+  }
+};
+
+// === IMAGE LIBRARY SERVICE ===
+export const ImageLibraryService = {
+  getImages: (): ImageAsset[] => {
+    return JSON.parse(localStorage.getItem(STORE_KEYS.IMAGE_LIBRARY) || '[]');
+  },
+
+  saveImage: (image: Omit<ImageAsset, 'id' | 'created_at'>): ImageAsset => {
+    const images = ImageLibraryService.getImages();
+    const newImage: ImageAsset = {
+      ...image,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString()
+    };
+    images.unshift(newImage); // Add to front
+    localStorage.setItem(STORE_KEYS.IMAGE_LIBRARY, JSON.stringify(images));
+    return newImage;
+  },
+
+  deleteImage: (id: string) => {
+    const images = ImageLibraryService.getImages().filter(i => i.id !== id);
+    localStorage.setItem(STORE_KEYS.IMAGE_LIBRARY, JSON.stringify(images));
+  },
+
+  toggleFavorite: (id: string) => {
+    const images = ImageLibraryService.getImages();
+    const idx = images.findIndex(i => i.id === id);
+    if (idx >= 0) {
+      images[idx].is_favorite = !images[idx].is_favorite;
+      localStorage.setItem(STORE_KEYS.IMAGE_LIBRARY, JSON.stringify(images));
+    }
+  },
+
+  getImagesByAgent: (agentId: string): ImageAsset[] => {
+    return ImageLibraryService.getImages().filter(i => i.agent_id === agentId);
   }
 };

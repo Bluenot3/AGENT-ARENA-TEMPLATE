@@ -13,6 +13,10 @@ import Marketplace from './pages/Marketplace';
 import Subscription from './pages/Subscription';
 import KnowledgeVault from './pages/KnowledgeVault';
 import ArenaDesigner from './pages/ArenaDesigner';
+import ImageStudio from './pages/ImageStudio';
+import ImageAgentStudio from './pages/ImageAgentStudio';
+import AppForge from './pages/AppForge';
+import GameLab from './pages/GameLab';
 import { AuthService } from './services/store';
 
 // WalletConnect / Reown Integration
@@ -26,7 +30,7 @@ export default function App() {
     const user = AuthService.getUser();
     setIsAuthenticated(!!user);
     setLoading(false);
-    
+
     // Log project ID for verification
     console.debug(`[ZEN_COMMERCE] Initializing Reown Gateway: ${PROJECT_ID}`);
   }, []);
@@ -51,6 +55,10 @@ export default function App() {
           <Route path="/keys" element={<KeysVault />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/studio/image" element={<ImageStudio />} />
+          <Route path="/studio/image-agents" element={<ImageAgentStudio />} />
+          <Route path="/studio/app" element={<AppForge />} />
+          <Route path="/studio/game" element={<GameLab />} />
         </Route>
       </Routes>
     </HashRouter>

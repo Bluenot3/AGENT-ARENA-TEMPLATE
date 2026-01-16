@@ -5,7 +5,7 @@ export interface Entitlement {
   id: string;
   user_id: string;
   type: EntitlementType;
-  resource_id: string; 
+  resource_id: string;
   status: 'active' | 'expired' | 'pending' | 'revoked';
   valid_until?: string;
   metadata: {
@@ -41,7 +41,37 @@ export interface Tool {
   name: string;
   description: string;
   enabled: boolean;
-  required_key?: string; 
+  required_key?: string;
+  // Enhanced fields for custom actions
+  category: 'core' | 'productivity' | 'integrations' | 'automation' | 'data' | 'creative' | 'communication' | 'finance' | 'custom';
+  icon?: string;
+  is_custom?: boolean;
+  parameters?: ToolParameter[];
+  action?: ToolAction;
+  created_at?: string;
+}
+
+export interface ToolParameter {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'select' | 'multiselect' | 'textarea' | 'email' | 'url';
+  label: string;
+  description?: string;
+  required?: boolean;
+  default_value?: any;
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+}
+
+export interface ToolAction {
+  type: 'webhook' | 'zapier' | 'make' | 'pabbly' | 'ifttt' | 'email' | 'pdf' | 'custom_code' | 'database' | 'api_call';
+  webhook_url?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  headers?: Record<string, string>;
+  body_template?: string;
+  code?: string;
+  success_message?: string;
+  error_message?: string;
 }
 
 export interface Artifact {
@@ -122,9 +152,9 @@ export interface BotConfig {
   avatar_url?: string;
   publish_state: 'draft' | 'private' | 'arena';
   system_instructions: string;
-  system_reminder?: string; 
-  positive_directives?: string; 
-  negative_directives?: string; 
+  system_reminder?: string;
+  positive_directives?: string;
+  negative_directives?: string;
   theme_config: BotThemeConfig;
   model_config: {
     primary_model: string;
@@ -177,7 +207,7 @@ export interface KnowledgeAsset {
   name: string;
   type: 'pdf' | 'url' | 'doc' | 'image' | 'text' | 'spreadsheet' | 'toon';
   source: string;
-  content?: string; 
+  content?: string;
   toon_chunks?: TOONChunk[];
   tags: string[];
   size?: string;
@@ -248,4 +278,38 @@ export interface Product {
   description?: string;
   resource_ids: string[];
   price_plans: PricePlan[];
+}
+
+// === IMAGE LIBRARY & CREDITS SYSTEM ===
+
+export interface ImageAsset {
+  id: string;
+  url: string;
+  prompt: string;
+  model: string;
+  agent_id?: string;
+  agent_name?: string;
+  style?: string;
+  aspect_ratio: string;
+  created_at: string;
+  tags: string[];
+  is_favorite: boolean;
+}
+
+export interface CreditsBalance {
+  total: number;
+  used: number;
+  remaining: number;
+  plan: 'free' | 'plus' | 'pro' | 'enterprise';
+  reset_date?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+}
+
+export interface ShareConfig {
+  type: 'link' | 'embed' | 'download';
+  embed_code?: string;
+  share_url?: string;
+  is_public: boolean;
+  expires_at?: string;
 }
