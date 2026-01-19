@@ -6,11 +6,13 @@ import {
   BookOpen, Layers, Radar, PanelLeftClose, PanelLeft,
   ChevronLeft, LayoutGrid, Briefcase, Zap, Settings,
   Cpu, Database, Box, Image, Code, Gamepad2,
-  Bot, Sparkles, Plus, Crown
+  Bot, Sparkles, Plus, Crown, Hexagon, Orbit, Flame,
+  Satellite, Radio, Wifi, Signal
 } from 'lucide-react';
 import { AuthService, CreditsService } from '../services/store';
 import { CreditsBalance } from '../types';
 import Logo from './Logo';
+import { ZenAgent, ZenArena, ZenKnowledge, ZenImageStudio, ZenSpark, ZenAppForge, ZenGameLab, ZenAnalytics, ZenKeys, ZenCrown, ZenPower } from './icons/ZenIcons';
 
 const SidebarItem = ({ to, icon: Icon, label, isCollapsed, badge, gradient }: { to: string; icon: any; label: string; isCollapsed: boolean; badge?: string; gradient?: string }) => (
   <NavLink
@@ -127,14 +129,29 @@ export default function Layout() {
           )}
 
           <section>
-            {!isCollapsed && <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2"><Bot size={10} /> Agent Hub</div>}
+            {!isCollapsed && (
+              <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <Hexagon size={8} className="text-white" />
+                </div>
+                Agent Hub
+              </div>
+            )}
             <SidebarItem to="/dashboard" icon={Terminal} label="Command" isCollapsed={isCollapsed} />
             <SidebarItem to="/marketplace" icon={LayoutGrid} label="Arenas" isCollapsed={isCollapsed} />
             <SidebarItem to="/knowledge" icon={BookOpen} label="Knowledge" isCollapsed={isCollapsed} />
           </section>
 
           <section>
-            {!isCollapsed && <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2"><Sparkles size={10} /> Creative Studios</div>}
+            {!isCollapsed && (
+              <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Sparkles size={8} className="text-white" />
+                </div>
+                Creative Studios
+                <span className="ml-auto px-1.5 py-0.5 rounded text-[6px] font-black bg-gradient-to-r from-cyan-500 to-blue-500 text-white">4</span>
+              </div>
+            )}
             <SidebarItem to="/studio/image" icon={Image} label="Image Studio" isCollapsed={isCollapsed} gradient="from-purple-600 to-pink-500" />
             <SidebarItem to="/studio/image-agents" icon={Sparkles} label="Agent Studio" isCollapsed={isCollapsed} gradient="from-rose-600 to-orange-500" badge="NEW" />
             <SidebarItem to="/studio/app" icon={Code} label="App Forge" isCollapsed={isCollapsed} gradient="from-emerald-600 to-teal-500" />
@@ -142,7 +159,14 @@ export default function Layout() {
           </section>
 
           <section>
-            {!isCollapsed && <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2"><Settings size={10} /> System</div>}
+            {!isCollapsed && (
+              <div className="px-6 pb-3 text-[8px] font-black text-slate-600 tracking-[0.4em] uppercase flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center">
+                  <Settings size={8} className="text-white" />
+                </div>
+                System
+              </div>
+            )}
             <SidebarItem to="/analytics" icon={Radar} label="Analytics" isCollapsed={isCollapsed} />
             <SidebarItem to="/keys" icon={Shield} label="API Keys" isCollapsed={isCollapsed} />
             <SidebarItem to="/subscription" icon={Crown} label="Subscription" isCollapsed={isCollapsed} />
@@ -154,12 +178,12 @@ export default function Layout() {
             <NavLink
               to="/subscription"
               className={`block mb-4 p-4 rounded-2xl transition-all holographic gradient-border-glow group/credits ${credits.plan === 'pro' || credits.plan === 'enterprise'
-                  ? 'bg-gradient-to-r from-purple-600/10 to-pink-600/10 border border-purple-500/20'
-                  : credits.plan === 'plus'
-                    ? 'bg-gradient-to-r from-blue-600/10 to-cyan-600/10 border border-blue-500/20'
-                    : CreditsService.getLowCreditsWarning()
-                      ? 'bg-gradient-to-r from-amber-600/10 to-red-600/10 border border-amber-500/30 animate-pulse'
-                      : 'bg-gradient-to-r from-slate-600/10 to-slate-700/10 border border-white/10'
+                ? 'bg-gradient-to-r from-purple-600/10 to-pink-600/10 border border-purple-500/20'
+                : credits.plan === 'plus'
+                  ? 'bg-gradient-to-r from-blue-600/10 to-cyan-600/10 border border-blue-500/20'
+                  : CreditsService.getLowCreditsWarning()
+                    ? 'bg-gradient-to-r from-amber-600/10 to-red-600/10 border border-amber-500/30 animate-pulse'
+                    : 'bg-gradient-to-r from-slate-600/10 to-slate-700/10 border border-white/10'
                 }`}
             >
               <div className="flex items-center gap-3 mb-3">
@@ -187,12 +211,12 @@ export default function Layout() {
               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden relative">
                 <div
                   className={`h-full rounded-full transition-all ${credits.plan === 'pro' || credits.plan === 'enterprise'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 w-full'
-                      : credits.plan === 'plus'
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                        : CreditsService.getLowCreditsWarning()
-                          ? 'bg-gradient-to-r from-amber-500 to-red-500'
-                          : 'bg-gradient-to-r from-slate-500 to-slate-400'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 w-full'
+                    : credits.plan === 'plus'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                      : CreditsService.getLowCreditsWarning()
+                        ? 'bg-gradient-to-r from-amber-500 to-red-500'
+                        : 'bg-gradient-to-r from-slate-500 to-slate-400'
                     }`}
                   style={{ width: credits.plan === 'pro' || credits.plan === 'enterprise' ? '100%' : `${(credits.remaining / credits.total) * 100}%` }}
                 />
@@ -210,7 +234,9 @@ export default function Layout() {
             onClick={AuthService.logout}
             className={`flex items-center gap-3 font-mono text-[9px] font-black text-slate-500 hover:text-rose-400 transition-all group ${isCollapsed ? 'justify-center w-full' : ''}`}
           >
-            <Power size={isCollapsed ? 20 : 14} />
+            <div className={`${isCollapsed ? '' : 'p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500/20 transition-all'}`}>
+              <Power size={isCollapsed ? 20 : 14} className="group-hover:rotate-180 transition-transform duration-500" />
+            </div>
             {!isCollapsed && <span className="uppercase tracking-[0.2em]">Logout</span>}
           </button>
         </div>
@@ -220,10 +246,19 @@ export default function Layout() {
       <main className="flex-1 flex flex-col min-w-0 bg-transparent relative overflow-hidden">
         <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-slate-900/10 backdrop-blur-xl shrink-0 z-30">
           <div className="flex items-center gap-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">
-            <Layers size={14} className="text-blue-500" />
-            <span>ZEN</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Hexagon size={12} className="text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">ZEN</span>
+            </div>
             <ChevronRight size={10} className="text-slate-700" />
             <span className="text-white uppercase">{location.pathname.substring(1).split('/')[0] || 'Dashboard'}</span>
+            {/* Live Status Indicator */}
+            <div className="flex items-center gap-2 ml-4 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-emerald-400 text-[8px]">LIVE</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/40 border border-white/5">

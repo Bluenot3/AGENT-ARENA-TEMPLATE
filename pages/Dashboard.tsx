@@ -8,8 +8,10 @@ import {
   Activity, Shield, Radio, Server, Boxes, Zap, Layout,
   Flame, Globe, ShieldCheck, Waves, Target, Binary,
   Image, Video, Code, Gamepad2, Sparkles, Bot, ChevronRight,
-  Brain, TrendingUp, Users, ArrowRight
+  Brain, TrendingUp, Users, ArrowRight, Hexagon, Orbit,
+  Rocket, Crown, Star, Layers3, Satellite, Fingerprint
 } from 'lucide-react';
+import { ZenArena, ZenAgent, ZenSpark, ZenCrown } from '../components/icons/ZenIcons';
 
 const STUDIOS = [
   {
@@ -17,38 +19,44 @@ const STUDIOS = [
     path: '/studio/image',
     icon: Image,
     title: 'Image Studio',
-    desc: 'Generate stunning AI images',
+    desc: 'Generate stunning AI images with elite quality',
     gradient: 'from-purple-600 to-pink-500',
-    stats: '47 styles'
+    stats: '47 styles',
+    glow: 'shadow-purple-500/20'
   },
   {
     id: 'app',
     path: '/studio/app',
     icon: Code,
     title: 'App Forge',
-    desc: 'Build full-stack apps with AI',
+    desc: 'Build full-stack apps with AI precision',
     gradient: 'from-emerald-600 to-teal-500',
-    stats: 'React, Vue'
+    stats: 'React, Vue, Svelte',
+    glow: 'shadow-emerald-500/20'
   },
   {
     id: 'game',
     path: '/studio/game',
     icon: Gamepad2,
     title: 'Game Lab',
-    desc: 'Create 2D/3D games',
+    desc: 'Create immersive 2D/3D games',
     gradient: 'from-amber-600 to-yellow-500',
     stats: 'Unity export',
-    badge: 'BETA'
+    badge: 'BETA',
+    glow: 'shadow-amber-500/20'
   },
 ];
 
 
-function MetricBox({ label, value, sub, icon: Icon, color = "text-blue-400", index = 0 }: any) {
+function MetricBox({ label, value, sub, icon: Icon, color = "text-blue-400", index = 0, gradient }: any) {
   return (
     <div
-      className="ultra-glass holographic p-8 flex flex-col gap-6 relative overflow-hidden group rounded-[2.5rem] stagger-reveal animated-border"
+      className="ultra-glass holographic p-8 flex flex-col gap-6 relative overflow-hidden group rounded-[2.5rem] stagger-reveal animated-border hover:scale-[1.02] transition-all duration-500"
       style={{ '--stagger-index': index, '--glow-color': 'rgba(59, 130, 246, 0.4)' } as React.CSSProperties}
     >
+      {/* Premium corner accent */}
+      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient || 'from-blue-500/10 to-cyan-500/10'} blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
+
       {/* Animated background icon */}
       <div className="absolute -top-10 -right-10 p-10 opacity-[0.03] text-blue-500 group-hover:scale-150 group-hover:opacity-[0.15] group-hover:rotate-12 transition-all duration-1000 ease-out">
         <Icon size={160} />
@@ -61,7 +69,7 @@ function MetricBox({ label, value, sub, icon: Icon, color = "text-blue-400", ind
       <div className="absolute top-6 right-6 w-2 h-2 rounded-full bg-blue-500/50 group-hover:bg-blue-400 transition-colors data-node" style={{ position: 'absolute', animation: 'dataNodePulse 2s ease-in-out infinite' }} />
 
       <div className="flex items-center gap-4 relative z-10">
-        <div className="p-3.5 rounded-2xl bg-blue-600/10 border border-blue-500/30 text-blue-500 shadow-[inset_0_0_25px_rgba(59,130,246,0.15)] group-hover:text-cyan-400 group-hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all duration-500 spring-hover">
+        <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${gradient || 'from-blue-600/20 to-cyan-600/20'} border border-blue-500/30 text-blue-500 shadow-[inset_0_0_25px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all duration-500 spring-hover`}>
           <Icon size={20} />
         </div>
         <span className="text-[11px] font-black text-slate-500 tracking-[0.2em] uppercase group-hover:text-slate-400 transition-colors">{label}</span>
@@ -74,7 +82,7 @@ function MetricBox({ label, value, sub, icon: Icon, color = "text-blue-400", ind
 
       {/* Animated progress bar */}
       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mt-6 relative">
-        <div className={`h-full bg-current ${color} rounded-full opacity-60 group-hover:opacity-100 transition-all duration-700`} style={{ width: '85%', animation: 'morphGradient 3s ease infinite' }} />
+        <div className={`h-full bg-gradient-to-r ${gradient || 'from-blue-500 to-cyan-500'} rounded-full opacity-60 group-hover:opacity-100 transition-all duration-700`} style={{ width: '85%', animation: 'morphGradient 3s ease infinite' }} />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
       </div>
 
@@ -86,11 +94,23 @@ function MetricBox({ label, value, sub, icon: Icon, color = "text-blue-400", ind
 
 
 
-function StudioCard({ studio, index = 0 }: { studio: typeof STUDIOS[0]; index?: number }) {
+interface StudioItem {
+  id: string;
+  path: string;
+  icon: any;
+  title: string;
+  desc: string;
+  gradient: string;
+  stats: string;
+  glow?: string;
+  badge?: string;
+}
+
+function StudioCard({ studio, index = 0 }: { studio: StudioItem; index?: number }) {
   return (
     <Link
       to={studio.path}
-      className="group relative p-7 rounded-[2rem] liquid-glass border border-white/[0.06] hover:border-white/20 transition-all duration-700 overflow-hidden holographic shine-sweep stagger-reveal animated-border"
+      className={`group relative p-7 rounded-[2rem] liquid-glass border border-white/[0.06] hover:border-white/20 transition-all duration-700 overflow-hidden holographic shine-sweep stagger-reveal animated-border hover:${studio.glow || 'shadow-blue-500/20'}`}
       style={{ '--stagger-index': index } as React.CSSProperties}
     >
       {/* Gradient overlay on hover */}
@@ -107,8 +127,10 @@ function StudioCard({ studio, index = 0 }: { studio: typeof STUDIOS[0]; index?: 
 
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${studio.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all duration-500 spring-hover`}>
+          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${studio.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all duration-500 spring-hover relative`}>
             <studio.icon size={26} className="text-white group-hover:rotate-12 transition-transform duration-500" />
+            {/* Icon glow ring */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${studio.gradient} blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -227,10 +249,10 @@ export default function Dashboard() {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <MetricBox label="Active Agents" value={bots.length.toString().padStart(2, '0')} sub="Deployed Units" icon={Bot} index={0} />
-        <MetricBox label="Arenas" value={arenas.length.toString().padStart(2, '0')} sub="Active Environments" icon={Layout} color="text-cyan-400" index={1} />
-        <MetricBox label="AI Models" value="50+" sub="Available Models" icon={Brain} color="text-purple-400" index={2} />
-        <MetricBox label="Generation" value="∞" sub="Unlimited Creations" icon={Sparkles} color="text-amber-400" index={3} />
+        <MetricBox label="Active Agents" value={bots.length.toString().padStart(2, '0')} sub="Deployed Units" icon={Bot} index={0} gradient="from-blue-500/20 to-cyan-500/20" />
+        <MetricBox label="Arenas" value={arenas.length.toString().padStart(2, '0')} sub="Active Environments" icon={Layout} color="text-cyan-400" index={1} gradient="from-cyan-500/20 to-teal-500/20" />
+        <MetricBox label="AI Models" value="50+" sub="Available Models" icon={Brain} color="text-purple-400" index={2} gradient="from-purple-500/20 to-pink-500/20" />
+        <MetricBox label="Generation" value="∞" sub="Unlimited Creations" icon={Sparkles} color="text-amber-400" index={3} gradient="from-amber-500/20 to-orange-500/20" />
       </div>
 
       {/* Creative Studios */}
