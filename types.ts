@@ -313,3 +313,16 @@ export interface ShareConfig {
   is_public: boolean;
   expires_at?: string;
 }
+
+export interface ImageAgent {
+  id: string;
+  name: string;
+  description: string;
+  templateId: string;
+  styles: string[];
+  aspectRatio: string;
+  quality: number;
+  model: string;
+  customPrompt: string;
+  createdAt: number;
+}

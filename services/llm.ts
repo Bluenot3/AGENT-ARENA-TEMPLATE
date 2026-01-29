@@ -4,13 +4,15 @@ import { BotConfig, Message, Artifact, KnowledgeAsset, ArenaTheme, TelemetryStep
 import { AnalyticsService, KnowledgeService, KeyService } from './store';
 import { WebIntelService } from './webintel';
 
-// Default API Key for Gemini (fallback when user hasn't added their own)
-const DEFAULT_GEMINI_KEY = 'AIzaSyDvwN3_SBXDR-T-0oAogHa0kJIeaPf1ems';
-
-// Get API key - prefer user's stored key, fall back to default
+// Get API key - prefer user's stored key
 const getApiKey = (): string => {
   const userKey = KeyService.getFullKey?.('google');
-  return userKey || DEFAULT_GEMINI_KEY;
+  if (!userKey) {
+    console.warn('Google API key not found. Please add it in settings.');
+    // Check local storage for emergency backup
+    return localStorage.getItem('zen_key_google') ? atob(localStorage.getItem('zen_key_google')!) : '';
+  }
+  return userKey;
 };
 
 // Model mapping for display names to actual API model names
@@ -371,7 +373,11 @@ The user will see a "VIEW" button to preview your creation in a live sandbox. Ma
       }
     } else if (isOpenAIModel) {
       // ========== OPENAI ROUTING ==========
-      const OPENAI_KEY = KeyService.getFullKey('openai') || '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';
+      const OPENAI_KEY = KeyService.getFullKey('openai');
+
+      if (!OPENAI_KEY) {
+        throw new Error('CRITICAL_ERROR: OpenAI API key not found. Please add your OpenAI API key in the API Keys section.');
+      }
 
       // Map display model names to actual OpenAI model names
       const openaiModelMap: Record<string, string> = {
@@ -532,7 +538,7 @@ The user will see a "VIEW" button to preview your creation in a live sandbox. Ma
 
   generateImageWithFailsafes: async (prompt: string, requestedModel: string, onRetry?: (msg: string) => void): Promise<string> => {
     // Get user's stored API keys
-    const openaiKey = KeyService.getFullKey('openai') || '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';
+    const openaiKey = KeyService.getFullKey('openai');
     const googleKey = getApiKey();
 
     // OpenAI DALL-E 3 Image Generation
@@ -593,7 +599,12 @@ The user will see a "VIEW" button to preview your creation in a live sandbox. Ma
 
   enhance: async (text: string): Promise<string> => {
     // Using OpenAI GPT-4.1 for reliable prompt enhancement
-    const OPENAI_KEY = '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';
+    const OPENAI_KEY = KeyService.getFullKey('openai');
+
+    if (!OPENAI_KEY) {
+      console.warn('Enhance disabled: No OpenAI key');
+      return text;
+    }
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

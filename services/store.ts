@@ -1,5 +1,5 @@
 
-import { Entitlement, WalletLink, User, ApiKey, BotConfig, UsageEvent, KnowledgeAsset, ArenaConfig, ArenaTheme, ImageAsset, CreditsBalance } from '../types';
+import { Entitlement, WalletLink, User, ApiKey, BotConfig, UsageEvent, KnowledgeAsset, ArenaConfig, ArenaTheme, ImageAsset, CreditsBalance, ImageAgent } from '../types';
 import { AESTHETIC_PRESETS } from '../constants';
 
 const STORE_KEYS = {
@@ -12,7 +12,8 @@ const STORE_KEYS = {
   KEYS: 'zen_keys',
   KNOWLEDGE: 'zen_knowledge',
   CREDITS: 'zen_credits',
-  IMAGE_LIBRARY: 'zen_image_library'
+  IMAGE_LIBRARY: 'zen_image_library',
+  IMAGE_AGENTS: 'zen_image_agents'
 };
 
 export const ArenaService = {
@@ -414,5 +415,23 @@ export const ImageLibraryService = {
 
   getImagesByAgent: (agentId: string): ImageAsset[] => {
     return ImageLibraryService.getImages().filter(i => i.agent_id === agentId);
+  }
+};
+
+export const ImageAgentService = {
+  getAgents: (): ImageAgent[] => {
+    const stored = localStorage.getItem(STORE_KEYS.IMAGE_AGENTS);
+    return stored ? JSON.parse(stored) : [];
+  },
+  saveAgent: (agent: ImageAgent) => {
+    const agents = ImageAgentService.getAgents();
+    const idx = agents.findIndex(a => a.id === agent.id);
+    if (idx >= 0) agents[idx] = agent;
+    else agents.unshift(agent);
+    localStorage.setItem(STORE_KEYS.IMAGE_AGENTS, JSON.stringify(agents));
+  },
+  deleteAgent: (id: string) => {
+    const agents = ImageAgentService.getAgents().filter(a => a.id !== id);
+    localStorage.setItem(STORE_KEYS.IMAGE_AGENTS, JSON.stringify(agents));
   }
 };

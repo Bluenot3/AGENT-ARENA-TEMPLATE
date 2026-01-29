@@ -6,10 +6,9 @@ import {
     Loader2, AlertCircle, CheckCircle2, Copy, Zap, Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BotService } from '../services/store';
+import { BotService, ImageAgentService } from '../services/store';
 import { IMAGE_STYLE_CHIPS, AESTHETIC_PRESETS } from '../constants';
-
-// Image Agent Templates - Specialized for different image generation tasks
+import { ImageAgent } from '../types';
 const IMAGE_AGENT_TEMPLATES = [
     {
         id: 'infographic-architect',
@@ -86,19 +85,6 @@ const IMAGE_MODELS = [
     { id: 'imagen-4', name: 'Imagen 4 Ultra', provider: 'Google', badge: 'PRO' },
 ];
 
-interface ImageAgent {
-    id: string;
-    name: string;
-    description: string;
-    templateId: string;
-    styles: string[];
-    aspectRatio: typeof ASPECT_RATIOS[number];
-    quality: number;
-    model: string;
-    customPrompt: string;
-    createdAt: number;
-}
-
 export default function ImageAgentStudio() {
     const navigate = useNavigate();
     const [selectedTemplate, setSelectedTemplate] = useState<typeof IMAGE_AGENT_TEMPLATES[0] | null>(null);
@@ -109,7 +95,7 @@ export default function ImageAgentStudio() {
     const [quality, setQuality] = useState(90);
     const [selectedModel, setSelectedModel] = useState('nano-banana-pro');
     const [customPrompt, setCustomPrompt] = useState('');
-    const [savedAgents, setSavedAgents] = useState<ImageAgent[]>([]);
+    const [savedAgents, setSavedAgents] = useState<ImageAgent[]>(ImageAgentService.getAgents());
     const [isSaving, setIsSaving] = useState(false);
     const [success, setSuccess] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -151,7 +137,8 @@ export default function ImageAgentStudio() {
             createdAt: Date.now(),
         };
 
-        setSavedAgents(prev => [newAgent, ...prev]);
+        ImageAgentService.saveAgent(newAgent);
+        setSavedAgents(ImageAgentService.getAgents());
         setSuccess(`${agentName} agent created successfully!`);
         setTimeout(() => setSuccess(null), 3000);
         setIsSaving(false);
@@ -165,7 +152,8 @@ export default function ImageAgentStudio() {
     };
 
     const deleteAgent = (id: string) => {
-        setSavedAgents(prev => prev.filter(a => a.id !== id));
+        ImageAgentService.deleteAgent(id);
+        setSavedAgents(ImageAgentService.getAgents());
     };
 
     return (
