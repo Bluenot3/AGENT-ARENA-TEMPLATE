@@ -1,20 +1,67 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Agent Arena Template → Agent OS (Phase 1)
 
-# Run and deploy your AI Studio app
+A production-oriented React + Vite control center for creating, managing, and monitoring AI agents.
 
-This contains everything you need to run your app locally.
+## Architecture overview
 
-View your app in AI Studio: https://ai.studio/apps/drive/1FL4YBRTu9513mv4j-j0_lMJXh-xuQgSQ
+The app now follows an `AppShell` layout and route-first architecture:
 
-## Run Locally
+- **Left Dock**: primary navigation (Dashboard, My Agents, Marketplace, Labs, Settings).
+- **Top Bar**: command palette trigger (`Ctrl/Cmd+K`), global search, create-agent CTA, dark mode toggle.
+- **Center Workspace**: route content and builder flows.
+- **Right Inspector**: selected-agent context, last run summary, quick actions.
 
-**Prerequisites:**  Node.js
+Core layers:
 
+- `models/`: canonical domain types (`Agent`, `AgentVersion`, `ModelConfig`, `ToolConfig`, `UsageEvent`)
+- `stores/`: `AgentStore` context + reducer with CRUD/versioning/run simulation
+- `services/`: registry storage abstraction + instrumentation hooks
+- `components/ui/`: reusable design primitives (button/card/badge/input/tabs/modal/toast/tooltip/skeleton)
+- `pages/`: route pages for Dashboard, Agents, Agent Detail, Marketplace, Labs, Settings
 
+## Storage/provider configuration
+
+Current persistence is **local-first** via `localStorage` in `services/agentRegistry.ts`.
+
+Swapping to Firebase or an API later only requires changing this service layer; UI and store contracts remain stable.
+
+## Features in this phase
+
+- AppShell layout and route-based navigation
+- Agent CRUD with persistent registry
+- Automatic version history on create/save
+- Usage monitoring scaffolding (mock run events, cost/tokens/latency placeholders)
+- Create Agent 4-step wizard
+- Keyboard-first create flow (`Ctrl/Cmd+K`)
+- Dark mode persistence
+- Labs section preserving access to legacy interactive pages
+- Instrumentation API: `trackEvent(eventName, payload)`
+
+## Run locally
+
+### Prerequisites
+- Node.js 20+
+
+### Commands
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+2. Run dev server:
+   ```bash
+   npm run dev
+   ```
+3. Build production bundle:
+   ```bash
+   npm run build
+   ```
+
+## Environment variables
+
+No client secrets are required for Phase 1 Agent OS flows.
+
+Legacy AI services in this repo may still use:
+
+- `GEMINI_API_KEY` for existing Gemini integrations.
+
+Keep secrets in `.env.local` and never hardcode credentials in client code.
